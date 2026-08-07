@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../features/customer/presentation/role_selection_screen.dart';
-import '../../features/customer/presentation/customer_home_screen.dart';
+import '../../features/customer/presentation/screens/home_screen.dart';
 import '../../features/vendor/presentation/vendor_home_screen.dart';
 import '../../features/rider/presentation/rider_home_screen.dart';
 
@@ -13,7 +13,7 @@ class AppRouter {
   static Map<String, WidgetBuilder> get routes {
     return {
       initialRoute: (context) => const RoleSelectionScreen(),
-      customerHome: (context) => const CustomerHomeScreen(),
+      customerHome: (context) => const HomeScreen(),
       vendorHome: (context) => const VendorHomeScreen(),
       riderHome: (context) => const RiderHomeScreen(),
     };
