@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -7,6 +8,8 @@ import '../widgets/custom_search_bar.dart';
 import '../widgets/category_list.dart';
 import '../widgets/promo_banner.dart';
 import '../widgets/restaurant_card.dart';
+import '../bloc/restaurant_cubit.dart';
+import '../bloc/restaurant_state.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -95,32 +98,73 @@ class HomeScreen extends StatelessWidget {
                 SizedBox(height: 8.h),
 
                 // Restaurant List
-                const RestaurantCard(
-                  name: 'Pizza Palace',
-                  cuisine: 'Italian • Pizza • Pasta • Burgers',
-                  rating: 4.8,
-                  deliveryTimeMin: 15,
-                  deliveryTimeMax: 25,
-                  deliveryFee: 0.0,
-                  imageUrl: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=600',
-                ),
-                const RestaurantCard(
-                  name: 'Rice & Curry Hot Spot',
-                  cuisine: 'Sri Lankan • Traditional Rice & Curry',
-                  rating: 4.6,
-                  deliveryTimeMin: 20,
-                  deliveryTimeMax: 30,
-                  deliveryFee: 1.50,
-                  imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600',
-                ),
-                const RestaurantCard(
-                  name: 'Kottu Hub',
-                  cuisine: 'Street Food • Cheese Kottu • Short Eats',
-                  rating: 4.7,
-                  deliveryTimeMin: 10,
-                  deliveryTimeMax: 20,
-                  deliveryFee: 0.0,
-                  imageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=600',
+                BlocBuilder<RestaurantCubit, RestaurantState>(
+                  builder: (context, state) {
+                    if (state is RestaurantLoading) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 32.0),
+                          child: CircularProgressIndicator(color: AppTheme.primary),
+                        ),
+                      );
+                    } else if (state is RestaurantLoaded) {
+                      final list = state.restaurants;
+                      if (list.isEmpty) {
+                        return Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 32.h),
+                            child: Text(
+                              'No active restaurants found.',
+                              style: GoogleFonts.poppins(color: Colors.grey[500]),
+                            ),
+                          ),
+                        );
+                      }
+                      return ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: list.length,
+                        itemBuilder: (context, index) {
+                          final r = list[index];
+                          return RestaurantCard(
+                            name: r.name,
+                            cuisine: r.description,
+                            rating: 4.5,
+                            deliveryTimeMin: 20,
+                            deliveryTimeMax: 30,
+                            deliveryFee: 0.0,
+                            imageUrl: r.coverImageUrl,
+                          );
+                        },
+                      );
+                    } else if (state is RestaurantError) {
+                      return Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 32.h),
+                          child: Column(
+                            children: [
+                              Icon(Icons.error_outline, color: AppTheme.primary, size: 40.sp),
+                              SizedBox(height: 8.h),
+                              Text(
+                                'Failed to load restaurants',
+                                style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppTheme.secondary,
+                                ),
+                              ),
+                              SizedBox(height: 4.h),
+                              Text(
+                                state.message,
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 12.sp),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
                 ),
                 SizedBox(height: 24.h),
               ],

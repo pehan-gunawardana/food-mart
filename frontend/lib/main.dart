@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routing/app_router.dart';
+import 'features/customer/data/repositories/restaurant_repository.dart';
+import 'features/customer/presentation/bloc/restaurant_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,14 +21,17 @@ class MyApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return MaterialApp(
-          title: 'FoodMart',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: ThemeMode.light,
-          initialRoute: AppRouter.initialRoute,
-          onGenerateRoute: AppRouter.onGenerateRoute,
+        return BlocProvider(
+          create: (context) => RestaurantCubit(RestaurantRepository())..fetchRestaurants(),
+          child: MaterialApp(
+            title: 'FoodMart',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: ThemeMode.light,
+            initialRoute: AppRouter.initialRoute,
+            onGenerateRoute: AppRouter.onGenerateRoute,
+          ),
         );
       },
     );
