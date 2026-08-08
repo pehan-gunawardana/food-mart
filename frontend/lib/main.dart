@@ -4,8 +4,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routing/app_router.dart';
 import 'features/customer/data/repositories/restaurant_repository.dart';
+import 'features/customer/data/repositories/order_repository.dart';
 import 'features/customer/presentation/bloc/restaurant_cubit.dart';
 import 'features/customer/presentation/bloc/cart_cubit.dart';
+import 'features/customer/presentation/bloc/order_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,6 +31,9 @@ class MyApp extends StatelessWidget {
             ),
             BlocProvider<CartCubit>(
               create: (context) => CartCubit(),
+            ),
+            BlocProvider<OrderCubit>(
+              create: (context) => OrderCubit(OrderRepository()),
             ),
           ],
           child: MaterialApp(

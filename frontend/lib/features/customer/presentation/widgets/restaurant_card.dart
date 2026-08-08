@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 
 class RestaurantCard extends StatelessWidget {
+  final String id;
   final String name;
   final String cuisine;
   final double rating;
@@ -14,6 +15,7 @@ class RestaurantCard extends StatelessWidget {
 
   const RestaurantCard({
     super.key,
+    required this.id,
     required this.name,
     required this.cuisine,
     required this.rating,
@@ -33,6 +35,7 @@ class RestaurantCard extends StatelessWidget {
           context,
           '/restaurant/detail',
           arguments: {
+            'id': id,
             'name': name,
             'cuisine': cuisine,
             'rating': rating,

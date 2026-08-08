@@ -3,10 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/network/api_client.dart';
 import '../../data/models/menu_item_model.dart';
 import '../bloc/cart_cubit.dart';
 import '../bloc/cart_state.dart';
 import '../widgets/menu_item_card.dart';
+import 'checkout_screen.dart';
 
 class RestaurantDetailScreen extends StatefulWidget {
   final Map<String, dynamic> restaurantArgs;
@@ -22,11 +24,13 @@ class RestaurantDetailScreen extends StatefulWidget {
 
 class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-
   final List<String> _categories = ["Popular", "Kottu", "Rice & Curry", "Beverages"];
 
-  // Mock Menu Items
-  final List<Map<String, dynamic>> _menuItems = [
+  List<MenuItemModel> _menuItems = [];
+  bool _isLoadingMenu = true;
+
+  // Fallback Mock Menu Items
+  final List<Map<String, dynamic>> _mockMenuItems = [
     {
       'name': 'Double Cheese Margherita',
       'description': 'Classic pizza loaded with extra mozzarella cheese and organic tomato sauce.',
@@ -93,6 +97,48 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> with Si
       if (!_tabController.indexIsChanging) {
         setState(() {});
       }
+    });
+    _fetchMenu();
+  }
+
+  Future<void> _fetchMenu() async {
+    final restaurantId = widget.restaurantArgs['id'] as String?;
+    if (restaurantId == null || restaurantId.isEmpty) {
+      _loadFallbackMockMenu();
+      return;
+    }
+
+    try {
+      final response = await ApiClient().dio.get('/restaurants/$restaurantId/menu');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data as List<dynamic>;
+        setState(() {
+          _menuItems = data
+              .map((json) => MenuItemModel.fromJson(json as Map<String, dynamic>))
+              .toList();
+          _isLoadingMenu = false;
+        });
+      } else {
+        _loadFallbackMockMenu();
+      }
+    } catch (e) {
+      _loadFallbackMockMenu();
+    }
+  }
+
+  void _loadFallbackMockMenu() {
+    setState(() {
+      _menuItems = _mockMenuItems.map((item) {
+        return MenuItemModel(
+          id: item['name'] as String, // Name as ID for mock fallback
+          name: item['name'] as String,
+          description: item['description'] as String,
+          price: (item['price'] as int).toDouble(),
+          imageUrl: item['imageUrl'] as String,
+          isAvailable: true,
+        );
+      }).toList();
+      _isLoadingMenu = false;
     });
   }
 
@@ -272,30 +318,68 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> with Si
               // Menu Items Lists
               SliverPadding(
                 padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 100.h), // Extra bottom padding for cart bar
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      // Filter items based on active tab category
-                      final activeCategory = _categories[_tabController.index];
-                      final categoryItems = _menuItems.where((item) => item['category'] == activeCategory).toList();
-                      
-                      if (index >= categoryItems.length) return null;
-                      
-                      final item = categoryItems[index];
-                      final itemModel = MenuItemModel(
-                        id: item['name'] as String,
-                        name: item['name'] as String,
-                        description: item['description'] as String,
-                        price: (item['price'] as int).toDouble(),
-                        imageUrl: item['imageUrl'] as String,
-                        isAvailable: true,
-                      );
+                sliver: _isLoadingMenu
+                    ? const SliverToBoxAdapter(
+                        child: Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 64.0),
+                            child: CircularProgressIndicator(color: AppTheme.primary),
+                          ),
+                        ),
+                      )
+                    : SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                            // Filter items based on active tab category
+                            final activeCategory = _categories[_tabController.index];
+                            final categoryItems = _menuItems.where((item) {
+                              final nameLower = item.name.toLowerCase();
+                              if (activeCategory == 'Kottu') {
+                                return nameLower.contains('kottu');
+                              } else if (activeCategory == 'Rice & Curry') {
+                                return nameLower.contains('rice') || nameLower.contains('curry');
+                              } else if (activeCategory == 'Beverages') {
+                                return nameLower.contains('milo') ||
+                                    nameLower.contains('juice') ||
+                                    nameLower.contains('coffee') ||
+                                    nameLower.contains('cola') ||
+                                    nameLower.contains('tea');
+                              } else {
+                                // 'Popular' or fallback category
+                                return !nameLower.contains('kottu') &&
+                                    !nameLower.contains('rice') &&
+                                    !nameLower.contains('curry') &&
+                                    !nameLower.contains('milo') &&
+                                    !nameLower.contains('juice') &&
+                                    !nameLower.contains('coffee') &&
+                                    !nameLower.contains('cola') &&
+                                    !nameLower.contains('tea');
+                              }
+                            }).toList();
 
-                      return MenuItemCard(item: itemModel);
-                    },
-                    childCount: _menuItems.length, // Upper bound, list builder returns null if out of range
-                  ),
-                ),
+                            if (categoryItems.isEmpty) {
+                              if (index == 0) {
+                                return Center(
+                                  child: Padding(
+                                    padding: EdgeInsets.symmetric(vertical: 32.h),
+                                    child: Text(
+                                      'No items available in this category.',
+                                      style: GoogleFonts.poppins(color: Colors.grey[500], fontSize: 13.sp),
+                                    ),
+                                  ),
+                                );
+                              }
+                              return null;
+                            }
+
+                            if (index >= categoryItems.length) return null;
+
+                            final itemModel = categoryItems[index];
+                            return MenuItemCard(item: itemModel);
+                          },
+                          childCount: _menuItems.length, // Upper bound
+                        ),
+                      ),
               ),
             ],
           ),
@@ -309,66 +393,79 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> with Si
                 left: 20.w,
                 right: 20.w,
                 bottom: 24.h,
-                child: Container(
-                  height: 58.h,
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary,
-                    borderRadius: BorderRadius.circular(16.r),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.primary.withOpacity(0.3),
-                        blurRadius: 16,
-                        offset: const Offset(0, 8),
+                child: GestureDetector(
+                  onTap: () {
+                    final restaurantId = widget.restaurantArgs['id'] as String? ?? '';
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CheckoutScreen(
+                          restaurantId: restaurantId,
+                        ),
                       ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(8.r),
+                    );
+                  },
+                  child: Container(
+                    height: 58.h,
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary,
+                      borderRadius: BorderRadius.circular(16.r),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primary.withOpacity(0.3),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Text(
+                                state.totalItems.toString(),
+                                style: GoogleFonts.poppins(
+                                  color: Colors.white,
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
-                            child: Text(
-                              state.totalItems.toString(),
+                            SizedBox(width: 12.w),
+                            Text(
+                              'LKR ${state.totalPrice.toInt()}',
                               style: GoogleFonts.poppins(
                                 color: Colors.white,
-                                fontSize: 14.sp,
+                                fontSize: 16.sp,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                          ),
-                          SizedBox(width: 12.w),
-                          Text(
-                            'LKR ${state.totalPrice.toInt()}',
-                            style: GoogleFonts.poppins(
-                              color: Colors.white,
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            Text(
+                              'View Cart',
+                              style: GoogleFonts.outfit(
+                                color: Colors.white,
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Text(
-                            'View Cart',
-                            style: GoogleFonts.outfit(
-                              color: Colors.white,
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 20.sp),
-                        ],
-                      ),
-                    ],
+                            SizedBox(width: 8.w),
+                            Icon(Icons.shopping_bag_outlined, color: Colors.white, size: 20.sp),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );

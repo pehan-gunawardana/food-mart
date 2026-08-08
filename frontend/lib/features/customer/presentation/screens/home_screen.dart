@@ -127,6 +127,7 @@ class HomeScreen extends StatelessWidget {
                         itemBuilder: (context, index) {
                           final r = list[index];
                           return RestaurantCard(
+                            id: r.id,
                             name: r.name,
                             cuisine: r.description,
                             rating: 4.5,
