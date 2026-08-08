@@ -37,7 +37,7 @@ class AddressHeader extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Tangalle Town',
+                    'Select Delivery Location',
                     style: GoogleFonts.outfit(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.bold,

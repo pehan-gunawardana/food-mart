@@ -72,7 +72,7 @@ class HomeScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Popular Restaurants in Tangalle',
+                      'Popular Near You',
                       style: GoogleFonts.outfit(
                         fontSize: 20.sp,
                         fontWeight: FontWeight.bold,
