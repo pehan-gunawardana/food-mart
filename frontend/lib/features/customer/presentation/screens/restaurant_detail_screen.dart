@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../data/models/menu_item_model.dart';
+import '../bloc/cart_cubit.dart';
+import '../bloc/cart_state.dart';
 import '../widgets/menu_item_card.dart';
 
 class RestaurantDetailScreen extends StatefulWidget {
@@ -18,7 +22,6 @@ class RestaurantDetailScreen extends StatefulWidget {
 
 class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final Map<String, int> _cartItems = {}; // Map of item name to quantity
 
   final List<String> _categories = ["Popular", "Kottu", "Rice & Curry", "Beverages"];
 
@@ -97,31 +100,6 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> with Si
   void dispose() {
     _tabController.dispose();
     super.dispose();
-  }
-
-  int get totalItems => _cartItems.values.fold(0, (sum, qty) => sum + qty);
-
-  int get totalPrice => _cartItems.entries.fold(0, (sum, entry) {
-        final item = _menuItems.firstWhere((x) => x['name'] == entry.key);
-        return sum + (item['price'] as int) * entry.value;
-      });
-
-  void _addToCart(String itemName) {
-    setState(() {
-      _cartItems[itemName] = (_cartItems[itemName] ?? 0) + 1;
-    });
-  }
-
-  void _removeFromCart(String itemName) {
-    setState(() {
-      if (_cartItems.containsKey(itemName)) {
-        if (_cartItems[itemName] == 1) {
-          _cartItems.remove(itemName);
-        } else {
-          _cartItems[itemName] = _cartItems[itemName]! - 1;
-        }
-      }
-    });
   }
 
   @override
@@ -304,17 +282,16 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> with Si
                       if (index >= categoryItems.length) return null;
                       
                       final item = categoryItems[index];
-                      final qty = _cartItems[item['name']] ?? 0;
-
-                      return MenuItemCard(
+                      final itemModel = MenuItemModel(
+                        id: item['name'] as String,
                         name: item['name'] as String,
                         description: item['description'] as String,
-                        price: item['price'] as int,
+                        price: (item['price'] as int).toDouble(),
                         imageUrl: item['imageUrl'] as String,
-                        quantity: qty,
-                        onAdd: () => _addToCart(item['name'] as String),
-                        onRemove: () => _removeFromCart(item['name'] as String),
+                        isAvailable: true,
                       );
+
+                      return MenuItemCard(item: itemModel);
                     },
                     childCount: _menuItems.length, // Upper bound, list builder returns null if out of range
                   ),
@@ -324,14 +301,14 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> with Si
           ),
 
           // Floating Bottom View Cart Bar
-          if (totalItems > 0)
-            Positioned(
-              left: 20.w,
-              right: 20.w,
-              bottom: 24.h,
-              child: AnimatedOpacity(
-                opacity: totalItems > 0 ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 250),
+          BlocBuilder<CartCubit, CartState>(
+            builder: (context, state) {
+              if (state.items.isEmpty) return const SizedBox.shrink();
+
+              return Positioned(
+                left: 20.w,
+                right: 20.w,
+                bottom: 24.h,
                 child: Container(
                   height: 58.h,
                   padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -358,7 +335,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> with Si
                               borderRadius: BorderRadius.circular(8.r),
                             ),
                             child: Text(
-                              totalItems.toString(),
+                              state.totalItems.toString(),
                               style: GoogleFonts.poppins(
                                 color: Colors.white,
                                 fontSize: 14.sp,
@@ -368,7 +345,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> with Si
                           ),
                           SizedBox(width: 12.w),
                           Text(
-                            'LKR $totalPrice',
+                            'LKR ${state.totalPrice.toInt()}',
                             style: GoogleFonts.poppins(
                               color: Colors.white,
                               fontSize: 16.sp,
@@ -394,8 +371,9 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> with Si
                     ],
                   ),
                 ),
-              ),
-            ),
+              );
+            },
+          ),
         ],
       ),
     );

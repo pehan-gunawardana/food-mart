@@ -5,6 +5,7 @@ import 'core/theme/app_theme.dart';
 import 'core/routing/app_router.dart';
 import 'features/customer/data/repositories/restaurant_repository.dart';
 import 'features/customer/presentation/bloc/restaurant_cubit.dart';
+import 'features/customer/presentation/bloc/cart_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,8 +22,15 @@ class MyApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return BlocProvider(
-          create: (context) => RestaurantCubit(RestaurantRepository())..fetchRestaurants(),
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider<RestaurantCubit>(
+              create: (context) => RestaurantCubit(RestaurantRepository())..fetchRestaurants(),
+            ),
+            BlocProvider<CartCubit>(
+              create: (context) => CartCubit(),
+            ),
+          ],
           child: MaterialApp(
             title: 'FoodMart',
             debugShowCheckedModeBanner: false,
