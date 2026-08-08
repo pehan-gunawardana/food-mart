@@ -6,7 +6,7 @@ import com.foodmart.backend.services.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import com.foodmart.backend.models.OrderStatus;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,5 +36,21 @@ public class OrderController {
     public ResponseEntity<List<Order>> getOrdersByCustomer(@PathVariable UUID customerId) {
         List<Order> orders = orderService.getOrdersByCustomer(customerId);
         return ResponseEntity.ok(orders);
+    }
+
+    @GetMapping("/restaurant/{restaurantId}")
+    public ResponseEntity<List<Order>> getOrdersByRestaurant(@PathVariable UUID restaurantId) {
+        List<Order> orders = orderService.getOrdersByRestaurant(restaurantId);
+        return ResponseEntity.ok(orders);
+    }
+
+    @PutMapping("/{orderId}/status")
+    public ResponseEntity<Order> updateOrderStatus(@PathVariable UUID orderId, @RequestParam OrderStatus status) {
+        try {
+            Order updated = orderService.updateOrderStatus(orderId, status);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

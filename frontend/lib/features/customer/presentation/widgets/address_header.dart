@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../vendor/presentation/screens/vendor_home_screen.dart';
 
 class AddressHeader extends StatelessWidget {
   const AddressHeader({super.key});
@@ -55,6 +56,17 @@ class AddressHeader extends StatelessWidget {
             ],
           ),
         ),
+        IconButton(
+          icon: Icon(Icons.storefront_outlined, color: AppTheme.primary, size: 24.sp),
+          tooltip: 'Vendor Mode',
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const VendorHomeScreen()),
+            );
+          },
+        ),
+        SizedBox(width: 8.w),
         Container(
           padding: EdgeInsets.all(8.r),
           decoration: BoxDecoration(

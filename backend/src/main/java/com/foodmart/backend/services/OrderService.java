@@ -109,4 +109,17 @@ public class OrderService {
 
         return orderRepository.findByCustomerIdOrderByCreatedAtDesc(customer.getId());
     }
+
+    @Transactional(readOnly = true)
+    public List<Order> getOrdersByRestaurant(UUID restaurantId) {
+        return orderRepository.findByRestaurantIdOrderByCreatedAtDesc(restaurantId);
+    }
+
+    @Transactional
+    public Order updateOrderStatus(UUID orderId, OrderStatus status) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found with ID: " + orderId));
+        order.setStatus(status);
+        return orderRepository.save(order);
+    }
 }
