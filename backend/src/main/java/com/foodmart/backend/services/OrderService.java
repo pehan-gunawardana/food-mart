@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class OrderService {
@@ -86,5 +87,26 @@ public class OrderService {
         order.setItems(orderItems);
 
         return orderRepository.save(order);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Order> getOrdersByCustomer(UUID customerId) {
+        User customer = null;
+        if (customerId != null) {
+            customer = userRepository.findById(customerId).orElse(null);
+        }
+
+        if (customer == null) {
+            customer = userRepository.findAll().stream()
+                    .filter(u -> u.getRole() == Role.CUSTOMER)
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        if (customer == null) {
+            return new ArrayList<>();
+        }
+
+        return orderRepository.findByCustomerIdOrderByCreatedAtDesc(customer.getId());
     }
 }

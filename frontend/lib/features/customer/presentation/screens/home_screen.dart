@@ -10,13 +10,85 @@ import '../widgets/promo_banner.dart';
 import '../widgets/restaurant_card.dart';
 import '../bloc/restaurant_cubit.dart';
 import '../bloc/restaurant_state.dart';
+import 'order_history_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _currentIndex = 0;
+
+  final List<Widget> _screens = [
+    const HomeBody(),
+    const OrderHistoryScreen(),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, -4),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          selectedItemColor: AppTheme.primary,
+          unselectedItemColor: Colors.grey[400],
+          backgroundColor: Colors.white,
+          selectedLabelStyle: GoogleFonts.outfit(
+            fontWeight: FontWeight.bold,
+            fontSize: 12.sp,
+          ),
+          unselectedLabelStyle: GoogleFonts.poppins(
+            fontWeight: FontWeight.w500,
+            fontSize: 11.sp,
+          ),
+          elevation: 0,
+          type: BottomNavigationBarType.fixed,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.shopping_bag_outlined),
+              activeIcon: Icon(Icons.shopping_bag),
+              label: 'Orders',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class HomeBody extends StatelessWidget {
+  const HomeBody({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),

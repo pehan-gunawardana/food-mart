@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/orders")
 @CrossOrigin(origins = "*")
@@ -27,5 +30,11 @@ public class OrderController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @GetMapping("/customer/{customerId}")
+    public ResponseEntity<List<Order>> getOrdersByCustomer(@PathVariable UUID customerId) {
+        List<Order> orders = orderService.getOrdersByCustomer(customerId);
+        return ResponseEntity.ok(orders);
     }
 }
