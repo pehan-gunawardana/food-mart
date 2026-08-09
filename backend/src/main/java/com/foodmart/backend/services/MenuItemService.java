@@ -34,4 +34,11 @@ public class MenuItemService {
         // We could also verify if the restaurant exists, but we can directly return list
         return menuItemRepository.findByRestaurantId(restaurantId);
     }
+
+    public MenuItem toggleItemAvailability(UUID itemId, boolean isAvailable) {
+        MenuItem menuItem = menuItemRepository.findById(itemId)
+                .orElseThrow(() -> new IllegalArgumentException("MenuItem with ID " + itemId + " not found"));
+        menuItem.setAvailable(isAvailable);
+        return menuItemRepository.save(menuItem);
+    }
 }

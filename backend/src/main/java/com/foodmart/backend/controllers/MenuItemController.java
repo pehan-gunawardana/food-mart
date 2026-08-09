@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/restaurants/{restaurantId}/menu")
+@RequestMapping("/api")
 @CrossOrigin(origins = "*")
 public class MenuItemController {
 
@@ -22,7 +22,7 @@ public class MenuItemController {
         this.menuItemService = menuItemService;
     }
 
-    @PostMapping
+    @PostMapping("/restaurants/{restaurantId}/menu")
     public ResponseEntity<?> addMenuItem(
             @PathVariable UUID restaurantId,
             @RequestBody MenuItem menuItem) {
@@ -34,9 +34,21 @@ public class MenuItemController {
         }
     }
 
-    @GetMapping
+    @GetMapping("/restaurants/{restaurantId}/menu")
     public ResponseEntity<List<MenuItem>> listMenuItems(@PathVariable UUID restaurantId) {
         List<MenuItem> items = menuItemService.listMenuItemsByRestaurant(restaurantId);
         return new ResponseEntity<>(items, HttpStatus.OK);
+    }
+
+    @PutMapping("/menu-items/{itemId}/availability")
+    public ResponseEntity<?> toggleItemAvailability(
+            @PathVariable UUID itemId,
+            @RequestParam boolean isAvailable) {
+        try {
+            MenuItem updated = menuItemService.toggleItemAvailability(itemId, isAvailable);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 }

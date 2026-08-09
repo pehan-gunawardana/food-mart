@@ -22,7 +22,36 @@ class MenuItemModel {
       description: json['description'] as String? ?? '',
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       imageUrl: json['imageUrl'] as String? ?? '',
-      isAvailable: json['isAvailable'] as bool? ?? false,
+      isAvailable: json['isAvailable'] as bool? ?? (json['available'] as bool? ?? false),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (id.isNotEmpty) 'id': id,
+      'name': name,
+      'description': description,
+      'price': price,
+      'imageUrl': imageUrl,
+      'isAvailable': isAvailable,
+    };
+  }
+
+  MenuItemModel copyWith({
+    String? id,
+    String? name,
+    String? description,
+    double? price,
+    String? imageUrl,
+    bool? isAvailable,
+  }) {
+    return MenuItemModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      price: price ?? this.price,
+      imageUrl: imageUrl ?? this.imageUrl,
+      isAvailable: isAvailable ?? this.isAvailable,
     );
   }
 }

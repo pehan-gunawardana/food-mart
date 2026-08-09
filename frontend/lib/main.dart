@@ -10,6 +10,8 @@ import 'features/customer/presentation/bloc/cart_cubit.dart';
 import 'features/customer/presentation/bloc/order_cubit.dart';
 import 'features/customer/presentation/bloc/order_history_cubit.dart';
 import 'features/vendor/presentation/bloc/vendor_orders_cubit.dart';
+import 'features/vendor/presentation/bloc/vendor_menu_cubit.dart';
+import 'features/vendor/data/repositories/menu_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,6 +44,9 @@ class MyApp extends StatelessWidget {
             ),
             BlocProvider<VendorOrdersCubit>(
               create: (context) => VendorOrdersCubit(OrderRepository()),
+            ),
+            BlocProvider<VendorMenuCubit>(
+              create: (context) => VendorMenuCubit(MenuRepository()),
             ),
           ],
           child: MaterialApp(
