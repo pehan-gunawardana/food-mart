@@ -87,20 +87,24 @@ class _VendorHomeScreenState extends State<VendorHomeScreen>
     }).toList();
   }
 
-  Widget _buildOrderAction(OrderModel order) {
+  Widget _buildOrderAction(OrderModel order, {bool isUpdating = false}) {
     final status = order.status.toUpperCase();
     String buttonText = '';
     String nextStatus = '';
+    Color buttonColor = AppTheme.secondary;
 
     if (status == 'PENDING') {
-      buttonText = 'Accept Order';
+      buttonText = 'Accept & Prepare';
       nextStatus = 'PREPARING';
+      buttonColor = const Color(0xFF2ECC71); // Green button
     } else if (status == 'ACCEPTED' || status == 'PREPARING') {
-      buttonText = 'Mark Ready / Dispatch';
+      buttonText = 'Mark as Ready/Dispatched';
       nextStatus = 'OUT_FOR_DELIVERY';
+      buttonColor = const Color(0xFF3498DB); // Blue button
     } else if (status == 'OUT_FOR_DELIVERY') {
       buttonText = 'Mark Delivered';
       nextStatus = 'DELIVERED';
+      buttonColor = AppTheme.secondary;
     }
 
     if (buttonText.isEmpty) return const SizedBox.shrink();
@@ -110,27 +114,46 @@ class _VendorHomeScreenState extends State<VendorHomeScreen>
       height: 44.h,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppTheme.secondary,
+          backgroundColor: buttonColor,
+          disabledBackgroundColor: buttonColor.withAlpha(153),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.r),
           ),
           elevation: 0,
         ),
-        onPressed: () {
-          context.read<VendorOrdersCubit>().updateStatus(
-                order.id,
-                nextStatus,
-                _restaurantId,
-              );
-        },
-        child: Text(
-          buttonText,
-          style: GoogleFonts.outfit(
-            color: Colors.white,
-            fontSize: 14.sp,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        onPressed: isUpdating
+            ? null
+            : () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Updating order status to $nextStatus...'),
+                    duration: const Duration(seconds: 2),
+                    backgroundColor: buttonColor,
+                  ),
+                );
+                context.read<VendorOrdersCubit>().updateOrderStatus(
+                      order.id,
+                      nextStatus,
+                    );
+              },
+        child: isUpdating
+            ? SizedBox(
+                width: 20.w,
+                height: 20.w,
+                child: const CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : Text(
+                buttonText,
+                style: GoogleFonts.outfit(
+                  color: Colors.white,
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
       ),
     );
   }
@@ -402,7 +425,10 @@ class _VendorHomeScreenState extends State<VendorHomeScreen>
                               SizedBox(height: 16.h),
 
                               // Dynamic Action Button
-                              _buildOrderAction(order),
+                              _buildOrderAction(
+                                order,
+                                isUpdating: state.updatingOrderId == order.id,
+                              ),
                             ],
                           ),
                         );

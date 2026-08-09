@@ -10,8 +10,9 @@ class VendorOrdersLoading extends VendorOrdersState {}
 
 class VendorOrdersLoaded extends VendorOrdersState {
   final List<OrderModel> orders;
+  final String? updatingOrderId;
 
-  const VendorOrdersLoaded(this.orders);
+  const VendorOrdersLoaded(this.orders, {this.updatingOrderId});
 }
 
 class VendorOrdersError extends VendorOrdersState {
