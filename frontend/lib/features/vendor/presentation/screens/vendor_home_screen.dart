@@ -9,6 +9,7 @@ import '../../../customer/data/models/order_model.dart';
 import '../bloc/vendor_orders_cubit.dart';
 import '../bloc/vendor_orders_state.dart';
 import 'vendor_menu_screen.dart';
+import '../../../auth/presentation/bloc/auth_cubit.dart';
 
 class VendorHomeScreen extends StatefulWidget {
   const VendorHomeScreen({super.key});
@@ -216,7 +217,14 @@ class _VendorHomeScreenState extends State<VendorHomeScreen>
               ),
             ],
           ),
-          SizedBox(width: 8.w),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.white),
+            tooltip: 'Logout',
+            onPressed: () {
+              context.read<AuthCubit>().logout();
+            },
+          ),
+          SizedBox(width: 4.w),
         ],
       ),
       body: IndexedStack(

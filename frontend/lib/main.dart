@@ -12,6 +12,12 @@ import 'features/customer/presentation/bloc/order_history_cubit.dart';
 import 'features/vendor/presentation/bloc/vendor_orders_cubit.dart';
 import 'features/vendor/presentation/bloc/vendor_menu_cubit.dart';
 import 'features/vendor/data/repositories/menu_repository.dart';
+import 'features/auth/data/repositories/auth_repository.dart';
+import 'features/auth/presentation/bloc/auth_cubit.dart';
+import 'features/auth/presentation/bloc/auth_state.dart';
+import 'features/auth/presentation/screens/login_screen.dart';
+import 'features/customer/presentation/screens/home_screen.dart';
+import 'features/vendor/presentation/screens/vendor_home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,6 +36,9 @@ class MyApp extends StatelessWidget {
       builder: (context, child) {
         return MultiBlocProvider(
           providers: [
+            BlocProvider<AuthCubit>(
+              create: (context) => AuthCubit(AuthRepository())..checkAuthStatus(),
+            ),
             BlocProvider<RestaurantCubit>(
               create: (context) => RestaurantCubit(RestaurantRepository())..fetchRestaurants(),
             ),
@@ -55,7 +64,23 @@ class MyApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: ThemeMode.light,
-            initialRoute: AppRouter.initialRoute,
+            home: BlocBuilder<AuthCubit, AuthState>(
+              builder: (context, state) {
+                if (state is Authenticated) {
+                  if (state.user.role.toUpperCase() == 'VENDOR') {
+                    return const VendorHomeScreen();
+                  }
+                  return const HomeScreen();
+                } else if (state is Unauthenticated || state is AuthError) {
+                  return const LoginScreen();
+                }
+                return const Scaffold(
+                  body: Center(
+                    child: CircularProgressIndicator(color: AppTheme.primary),
+                  ),
+                );
+              },
+            ),
             onGenerateRoute: AppRouter.onGenerateRoute,
           ),
         );

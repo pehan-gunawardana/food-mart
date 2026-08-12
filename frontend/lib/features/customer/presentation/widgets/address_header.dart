@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../vendor/presentation/screens/vendor_home_screen.dart';
+import '../../../auth/presentation/bloc/auth_cubit.dart';
 
 class AddressHeader extends StatelessWidget {
   const AddressHeader({super.key});
@@ -13,7 +15,7 @@ class AddressHeader extends StatelessWidget {
       children: [
         CircleAvatar(
           radius: 20.r,
-          backgroundColor: AppTheme.primary.withOpacity(0.1),
+          backgroundColor: AppTheme.primary.withAlpha(25),
           child: Icon(
             Icons.location_on,
             color: AppTheme.primary,
@@ -66,18 +68,12 @@ class AddressHeader extends StatelessWidget {
             );
           },
         ),
-        SizedBox(width: 8.w),
-        Container(
-          padding: EdgeInsets.all(8.r),
-          decoration: BoxDecoration(
-            color: AppTheme.secondary.withOpacity(0.05),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.notifications_none_outlined,
-            color: AppTheme.secondary,
-            size: 24.sp,
-          ),
+        IconButton(
+          icon: Icon(Icons.logout, color: Colors.grey[700], size: 22.sp),
+          tooltip: 'Logout',
+          onPressed: () {
+            context.read<AuthCubit>().logout();
+          },
         ),
       ],
     );
