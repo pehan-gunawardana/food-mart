@@ -18,6 +18,8 @@ import 'features/auth/presentation/bloc/auth_state.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/customer/presentation/screens/home_screen.dart';
 import 'features/vendor/presentation/screens/vendor_home_screen.dart';
+import 'features/rider/presentation/bloc/rider_orders_cubit.dart';
+import 'features/rider/presentation/rider_home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,6 +59,9 @@ class MyApp extends StatelessWidget {
             BlocProvider<VendorMenuCubit>(
               create: (context) => VendorMenuCubit(MenuRepository()),
             ),
+            BlocProvider<RiderOrdersCubit>(
+              create: (context) => RiderOrdersCubit(OrderRepository()),
+            ),
           ],
           child: MaterialApp(
             title: 'FoodMart',
@@ -67,8 +72,11 @@ class MyApp extends StatelessWidget {
             home: BlocBuilder<AuthCubit, AuthState>(
               builder: (context, state) {
                 if (state is Authenticated) {
-                  if (state.user.role.toUpperCase() == 'VENDOR') {
+                  final role = state.user.role.toUpperCase();
+                  if (role == 'VENDOR') {
                     return const VendorHomeScreen();
+                  } else if (role == 'RIDER') {
+                    return const RiderHomeScreen();
                   }
                   return const HomeScreen();
                 } else if (state is Unauthenticated || state is AuthError) {

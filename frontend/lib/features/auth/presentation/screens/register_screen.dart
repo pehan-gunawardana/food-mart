@@ -339,6 +339,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           value: 'VENDOR',
                           child: Text('Vendor / Restaurant Owner'),
                         ),
+                        DropdownMenuItem(
+                          value: 'RIDER',
+                          child: Text('Delivery Rider'),
+                        ),
                       ],
                       onChanged: (val) {
                         if (val != null) {

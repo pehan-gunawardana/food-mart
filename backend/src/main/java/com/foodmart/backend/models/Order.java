@@ -51,6 +51,10 @@ public class Order {
     @Column(nullable = false)
     private String deliveryAddress;
 
+    @ManyToOne
+    @JoinColumn(name = "rider_id")
+    private User rider;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;

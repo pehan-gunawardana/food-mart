@@ -1,3 +1,4 @@
+import '../../../auth/data/models/user_model.dart';
 import 'menu_item_model.dart';
 
 class OrderModel {
@@ -7,6 +8,7 @@ class OrderModel {
   final String deliveryAddress;
   final DateTime createdAt;
   final List<OrderItemModel> items;
+  final UserModel? rider;
 
   OrderModel({
     required this.id,
@@ -15,6 +17,7 @@ class OrderModel {
     required this.deliveryAddress,
     required this.createdAt,
     required this.items,
+    this.rider,
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -30,6 +33,9 @@ class OrderModel {
       items: itemsList
           .map((itemJson) => OrderItemModel.fromJson(itemJson as Map<String, dynamic>))
           .toList(),
+      rider: json['rider'] != null
+          ? UserModel.fromJson(json['rider'] as Map<String, dynamic>)
+          : null,
     );
   }
 }

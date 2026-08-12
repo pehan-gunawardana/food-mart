@@ -81,4 +81,31 @@ class OrderRepository {
       throw Exception('Failed to update order status: $e');
     }
   }
+
+  Future<List<OrderModel>> getRiderOrders(String riderId) async {
+    try {
+      final response = await _apiClient.dio.get('/orders/rider/$riderId');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data as List<dynamic>;
+        return data.map((json) => OrderModel.fromJson(json as Map<String, dynamic>)).toList();
+      } else {
+        throw Exception('Server returned status: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to fetch rider orders: $e');
+    }
+  }
+
+  Future<OrderModel> assignRider(String orderId, String riderId) async {
+    try {
+      final response = await _apiClient.dio.put('/orders/$orderId/assign/$riderId');
+      if (response.statusCode == 200) {
+        return OrderModel.fromJson(response.data as Map<String, dynamic>);
+      } else {
+        throw Exception('Server returned status: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to assign rider: $e');
+    }
+  }
 }

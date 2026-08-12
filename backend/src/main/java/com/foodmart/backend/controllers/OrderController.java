@@ -53,4 +53,20 @@ public class OrderController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @GetMapping("/rider/{riderId}")
+    public ResponseEntity<List<Order>> getOrdersByRider(@PathVariable UUID riderId) {
+        List<Order> orders = orderService.getOrdersByRider(riderId);
+        return ResponseEntity.ok(orders);
+    }
+
+    @PutMapping("/{orderId}/assign/{riderId}")
+    public ResponseEntity<Order> assignRider(@PathVariable UUID orderId, @PathVariable UUID riderId) {
+        try {
+            Order updated = orderService.assignRider(orderId, riderId);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 }

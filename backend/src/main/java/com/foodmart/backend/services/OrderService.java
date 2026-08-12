@@ -123,4 +123,23 @@ public class OrderService {
         order.setStatus(status);
         return orderRepository.save(order);
     }
+
+    @Transactional(readOnly = true)
+    public List<Order> getOrdersByRider(UUID riderId) {
+        return orderRepository.findByRiderIdOrderByUpdatedAtDesc(riderId);
+    }
+
+    @Transactional
+    public Order assignRider(UUID orderId, UUID riderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found with ID: " + orderId));
+        User rider = userRepository.findById(riderId)
+                .orElseThrow(() -> new IllegalArgumentException("Rider not found with ID: " + riderId));
+        if (rider.getRole() != Role.RIDER) {
+            throw new IllegalArgumentException("User with ID " + riderId + " is not a RIDER");
+        }
+        order.setRider(rider);
+        order.setStatus(OrderStatus.OUT_FOR_DELIVERY);
+        return orderRepository.save(order);
+    }
 }
