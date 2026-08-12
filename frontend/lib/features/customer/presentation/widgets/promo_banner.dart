@@ -110,10 +110,11 @@ class _PromoBannerState extends State<PromoBanner> {
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 18.h),
+                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Container(
                               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
@@ -131,19 +132,25 @@ class _PromoBannerState extends State<PromoBanner> {
                                 ),
                               ),
                             ),
-                            SizedBox(height: 8.h),
-                            Text(
-                              promo['title'] as String,
-                              style: GoogleFonts.outfit(
-                                color: Colors.white,
-                                fontSize: 20.sp,
-                                fontWeight: FontWeight.bold,
-                                height: 1.2,
+                            SizedBox(height: 6.h),
+                            Flexible(
+                              child: Text(
+                                promo['title'] as String,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.outfit(
+                                  color: Colors.white,
+                                  fontSize: 20.sp,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.2,
+                                ),
                               ),
                             ),
-                            SizedBox(height: 4.h),
+                            SizedBox(height: 2.h),
                             Text(
                               promo['subtitle'] as String,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.poppins(
                                 color: Colors.white.withOpacity(0.85),
                                 fontSize: 12.sp,
