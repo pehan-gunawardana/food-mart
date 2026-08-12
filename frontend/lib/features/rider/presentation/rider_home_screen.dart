@@ -55,8 +55,8 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
             unselectedLabelColor: Colors.grey,
             labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14.sp),
             tabs: const [
-              Tab(text: 'Active Deliveries'),
-              Tab(text: 'Completed'),
+              Tab(text: 'Available Requests'),
+              Tab(text: 'My Deliveries'),
             ],
           ),
         ),
@@ -85,14 +85,10 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                 ),
               );
             } else if (state is RiderOrdersLoaded) {
-              final orders = state.orders;
-              final activeOrders = orders.where((o) => o.status.toUpperCase() == 'OUT_FOR_DELIVERY').toList();
-              final completedOrders = orders.where((o) => o.status.toUpperCase() == 'DELIVERED').toList();
-
               return TabBarView(
                 children: [
-                  _buildOrderList(activeOrders, state.updatingOrderId, riderId, isActive: true),
-                  _buildOrderList(completedOrders, state.updatingOrderId, riderId, isActive: false),
+                  _buildAvailableList(state.availableOrders, state.updatingOrderId, riderId),
+                  _buildMyDeliveriesList(state.myOrders, state.updatingOrderId, riderId),
                 ],
               );
             }
@@ -103,7 +99,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     );
   }
 
-  Widget _buildOrderList(List<OrderModel> orders, String? updatingOrderId, String riderId, {required bool isActive}) {
+  Widget _buildAvailableList(List<OrderModel> orders, String? updatingOrderId, String riderId) {
     return RefreshIndicator(
       onRefresh: () async {
         if (riderId.isNotEmpty) {
@@ -113,17 +109,10 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
       child: ListView(
         padding: EdgeInsets.all(16.w),
         children: [
-          if (isActive) ...[
-            _buildDutyCard(),
-            SizedBox(height: 16.h),
-            _buildStatsRow(orders.length),
-            SizedBox(height: 24.h),
-          ] else ...[
-            _buildStatsRow(orders.length),
-            SizedBox(height: 24.h),
-          ],
+          _buildDutyCard(),
+          SizedBox(height: 24.h),
           Text(
-            isActive ? 'Active Assignments (${orders.length})' : 'Delivery History (${orders.length})',
+            'Available Requests (${orders.length})',
             style: GoogleFonts.outfit(
               fontSize: 18.sp,
               fontWeight: FontWeight.bold,
@@ -132,7 +121,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
           ),
           SizedBox(height: 12.h),
           if (orders.isEmpty)
-            _buildEmptyPlaceholder(isActive)
+            _buildEmptyPlaceholder(true)
           else
             ListView.builder(
               shrinkWrap: true,
@@ -140,7 +129,47 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               itemCount: orders.length,
               itemBuilder: (context, index) {
                 final order = orders[index];
-                return _buildOrderCard(order, updatingOrderId, isActive);
+                return _buildAvailableOrderCard(order, updatingOrderId, riderId);
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMyDeliveriesList(List<OrderModel> orders, String? updatingOrderId, String riderId) {
+    final completedCount = orders.where((o) => o.status.toUpperCase() == 'DELIVERED').length;
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        if (riderId.isNotEmpty) {
+          await context.read<RiderOrdersCubit>().fetchOrders(riderId);
+        }
+      },
+      child: ListView(
+        padding: EdgeInsets.all(16.w),
+        children: [
+          _buildStatsRow(completedCount),
+          SizedBox(height: 24.h),
+          Text(
+            'My Deliveries (${orders.length})',
+            style: GoogleFonts.outfit(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.secondary,
+            ),
+          ),
+          SizedBox(height: 12.h),
+          if (orders.isEmpty)
+            _buildEmptyPlaceholder(false)
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: orders.length,
+              itemBuilder: (context, index) {
+                final order = orders[index];
+                return _buildMyOrderCard(order, updatingOrderId, riderId);
               },
             ),
         ],
@@ -240,7 +269,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     );
   }
 
-  Widget _buildEmptyPlaceholder(bool isActive) {
+  Widget _buildEmptyPlaceholder(bool isAvailable) {
     return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(vertical: 40.h),
@@ -248,13 +277,13 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              isActive ? Icons.motorcycle_outlined : Icons.history,
+              isAvailable ? Icons.motorcycle_outlined : Icons.history,
               size: 64.sp,
               color: Colors.grey[400],
             ),
             SizedBox(height: 16.h),
             Text(
-              isActive ? 'No active delivery assignments' : 'No completed deliveries yet',
+              isAvailable ? 'No available deliveries near you' : 'No claimed deliveries yet',
               style: GoogleFonts.poppins(
                 color: Colors.grey[600],
                 fontSize: 14.sp,
@@ -267,7 +296,7 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
     );
   }
 
-  Widget _buildOrderCard(OrderModel order, String? updatingOrderId, bool isActive) {
+  Widget _buildAvailableOrderCard(OrderModel order, String? updatingOrderId, String riderId) {
     final isUpdating = updatingOrderId == order.id;
 
     return Card(
@@ -293,13 +322,13 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: isActive ? Colors.orange.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+                    color: Colors.orange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Text(
                     order.status.replaceAll('_', ' '),
                     style: GoogleFonts.poppins(
-                      color: isActive ? Colors.orange : Colors.green,
+                      color: Colors.orange,
                       fontSize: 11.sp,
                       fontWeight: FontWeight.bold,
                     ),
@@ -374,7 +403,164 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                 ),
               ],
             ),
-            if (isActive) ...[
+            SizedBox(height: 16.h),
+            SizedBox(
+              width: double.infinity,
+              height: 48.h,
+              child: ElevatedButton(
+                onPressed: isUpdating
+                    ? null
+                    : () => context.read<RiderOrdersCubit>().claimOrder(order.id, riderId),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  elevation: 0,
+                ),
+                child: isUpdating
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : Text(
+                        'Accept Delivery',
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15.sp,
+                        ),
+                      ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMyOrderCard(OrderModel order, String? updatingOrderId, String riderId) {
+    final isUpdating = updatingOrderId == order.id;
+    final status = order.status.toUpperCase();
+
+    String actionText = '';
+    String nextStatus = '';
+    Color buttonColor = Colors.green;
+
+    if (status == 'RIDER_ASSIGNED') {
+      actionText = 'Mark as Picked Up';
+      nextStatus = 'PICKED_UP';
+      buttonColor = Colors.orange;
+    } else if (status == 'PICKED_UP') {
+      actionText = 'Mark as Delivered';
+      nextStatus = 'DELIVERED';
+      buttonColor = Colors.green;
+    }
+
+    return Card(
+      margin: EdgeInsets.only(bottom: 16.h),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Order ID: #${order.id.substring(0, 8).toUpperCase()}',
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15.sp,
+                    color: AppTheme.secondary,
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: status == 'DELIVERED'
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : Colors.blue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Text(
+                    order.status.replaceAll('_', ' '),
+                    style: GoogleFonts.poppins(
+                      color: status == 'DELIVERED' ? Colors.green : Colors.blue,
+                      fontSize: 11.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 24),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.location_on, color: AppTheme.primary, size: 20.sp),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Delivery Address',
+                        style: GoogleFonts.poppins(
+                          color: Colors.grey[500],
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 2.h),
+                      Text(
+                        order.deliveryAddress,
+                        style: GoogleFonts.poppins(
+                          fontSize: 13.sp,
+                          color: AppTheme.secondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Total Amount',
+                      style: GoogleFonts.poppins(
+                        color: Colors.grey[500],
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 2.h),
+                    Text(
+                      '\$${order.totalAmount.toStringAsFixed(2)}',
+                      style: GoogleFonts.outfit(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.secondary,
+                      ),
+                    ),
+                  ],
+                ),
+                Text(
+                  _formatDate(order.createdAt),
+                  style: GoogleFonts.poppins(
+                    fontSize: 11.sp,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ],
+            ),
+            if (actionText.isNotEmpty) ...[
               SizedBox(height: 16.h),
               SizedBox(
                 width: double.infinity,
@@ -382,9 +568,9 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                 child: ElevatedButton(
                   onPressed: isUpdating
                       ? null
-                      : () => context.read<RiderOrdersCubit>().markAsDelivered(order.id),
+                      : () => context.read<RiderOrdersCubit>().updateStatus(order.id, nextStatus, riderId),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
+                    backgroundColor: buttonColor,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12.r),
@@ -394,12 +580,32 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                   child: isUpdating
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(
-                          'Mark as Delivered',
+                          actionText,
                           style: GoogleFonts.outfit(
                             fontWeight: FontWeight.bold,
                             fontSize: 15.sp,
                           ),
                         ),
+                ),
+              ),
+            ] else if (status == 'DELIVERED') ...[
+              SizedBox(height: 16.h),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Center(
+                  child: Text(
+                    'Delivered Successfully',
+                    style: GoogleFonts.outfit(
+                      color: Colors.green,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14.sp,
+                    ),
+                  ),
                 ),
               ),
             ],

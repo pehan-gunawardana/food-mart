@@ -1,6 +1,7 @@
 package com.foodmart.backend.repositories;
 
 import com.foodmart.backend.models.Order;
+import com.foodmart.backend.models.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,4 +13,5 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     List<Order> findByCustomerIdOrderByCreatedAtDesc(UUID customerId);
     List<Order> findByRestaurantIdOrderByCreatedAtDesc(UUID restaurantId);
     List<Order> findByRiderIdOrderByUpdatedAtDesc(UUID riderId);
+    List<Order> findByStatusAndRiderIsNull(OrderStatus status);
 }

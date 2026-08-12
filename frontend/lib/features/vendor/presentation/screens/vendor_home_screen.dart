@@ -80,10 +80,11 @@ class _VendorHomeScreenState extends State<VendorHomeScreen>
         return status == 'PENDING';
       } else if (tabIndex == 1) {
         // Preparing
-        return status == 'ACCEPTED' || status == 'PREPARING';
+        return status == 'ACCEPTED' || status == 'PREPARING' || status == 'RIDER_ASSIGNED';
       } else {
         // Ready / Dispatched
-        return status == 'OUT_FOR_DELIVERY' ||
+        return status == 'PICKED_UP' ||
+            status == 'OUT_FOR_DELIVERY' ||
             status == 'DELIVERED' ||
             status == 'CANCELLED';
       }
@@ -100,14 +101,6 @@ class _VendorHomeScreenState extends State<VendorHomeScreen>
       buttonText = 'Accept & Prepare';
       nextStatus = 'PREPARING';
       buttonColor = const Color(0xFF2ECC71); // Green button
-    } else if (status == 'ACCEPTED' || status == 'PREPARING') {
-      buttonText = 'Mark as Ready/Dispatched';
-      nextStatus = 'OUT_FOR_DELIVERY';
-      buttonColor = const Color(0xFF3498DB); // Blue button
-    } else if (status == 'OUT_FOR_DELIVERY') {
-      buttonText = 'Mark Delivered';
-      nextStatus = 'DELIVERED';
-      buttonColor = AppTheme.secondary;
     }
 
     if (buttonText.isEmpty) return const SizedBox.shrink();

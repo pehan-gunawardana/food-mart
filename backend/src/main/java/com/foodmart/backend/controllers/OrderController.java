@@ -69,4 +69,22 @@ public class OrderController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @GetMapping("/available-for-delivery")
+    public ResponseEntity<List<Order>> getAvailableOrdersForDelivery() {
+        List<Order> orders = orderService.getAvailableOrdersForDelivery();
+        return ResponseEntity.ok(orders);
+    }
+
+    @PutMapping("/{orderId}/claim/{riderId}")
+    public ResponseEntity<?> claimOrder(@PathVariable("orderId") UUID orderId, @PathVariable("riderId") UUID riderId) {
+        try {
+            Order updated = orderService.claimOrder(orderId, riderId);
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            System.err.println("Claim Order failed: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

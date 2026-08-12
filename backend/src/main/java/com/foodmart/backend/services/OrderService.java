@@ -142,4 +142,32 @@ public class OrderService {
         order.setStatus(OrderStatus.OUT_FOR_DELIVERY);
         return orderRepository.save(order);
     }
+
+    @Transactional(readOnly = true)
+    public List<Order> getAvailableOrdersForDelivery() {
+        List<Order> accepted = orderRepository.findByStatusAndRiderIsNull(OrderStatus.ACCEPTED);
+        List<Order> preparing = orderRepository.findByStatusAndRiderIsNull(OrderStatus.PREPARING);
+        List<Order> combined = new ArrayList<>();
+        combined.addAll(accepted);
+        combined.addAll(preparing);
+        combined.sort((o1, o2) -> o2.getCreatedAt().compareTo(o1.getCreatedAt()));
+        return combined;
+    }
+
+    @Transactional
+    public Order claimOrder(UUID orderId, UUID riderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found with ID: " + orderId));
+        if (order.getRider() != null) {
+            throw new RuntimeException("Order already claimed");
+        }
+        User rider = userRepository.findById(riderId)
+                .orElseThrow(() -> new IllegalArgumentException("Rider not found with ID: " + riderId));
+        if (rider.getRole() != Role.RIDER) {
+            throw new IllegalArgumentException("User with ID " + riderId + " is not a RIDER");
+        }
+        order.setRider(rider);
+        order.setStatus(OrderStatus.RIDER_ASSIGNED);
+        return orderRepository.save(order);
+    }
 }

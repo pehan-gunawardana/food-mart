@@ -108,4 +108,32 @@ class OrderRepository {
       throw Exception('Failed to assign rider: $e');
     }
   }
+
+  Future<List<OrderModel>> getAvailableOrdersForDelivery() async {
+    try {
+      final response = await _apiClient.dio.get('/orders/available-for-delivery');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data as List<dynamic>;
+        return data.map((json) => OrderModel.fromJson(json as Map<String, dynamic>)).toList();
+      } else {
+        throw Exception('Server returned status: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to fetch available orders: $e');
+    }
+  }
+
+  Future<OrderModel> claimOrder(String orderId, String riderId) async {
+    try {
+      print('Claim URL: /orders/$orderId/claim/$riderId');
+      final response = await _apiClient.dio.put('/orders/$orderId/claim/$riderId', data: {});
+      if (response.statusCode == 200) {
+        return OrderModel.fromJson(response.data as Map<String, dynamic>);
+      } else {
+        throw Exception('Server returned status: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Failed to claim order: $e');
+    }
+  }
 }

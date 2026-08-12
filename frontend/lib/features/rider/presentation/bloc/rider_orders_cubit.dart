@@ -4,33 +4,53 @@ import 'rider_orders_state.dart';
 
 class RiderOrdersCubit extends Cubit<RiderOrdersState> {
   final OrderRepository orderRepository;
-  String? _currentRiderId;
 
   RiderOrdersCubit(this.orderRepository) : super(RiderOrdersInitial());
 
   Future<void> fetchOrders(String riderId) async {
-    _currentRiderId = riderId;
     emit(RiderOrdersLoading());
     try {
-      final list = await orderRepository.getRiderOrders(riderId);
-      emit(RiderOrdersLoaded(list));
+      final available = await orderRepository.getAvailableOrdersForDelivery();
+      final myOrders = await orderRepository.getRiderOrders(riderId);
+      emit(RiderOrdersLoaded(availableOrders: available, myOrders: myOrders));
     } catch (e) {
       emit(RiderOrdersError(e.toString()));
     }
   }
 
-  Future<void> markAsDelivered(String orderId, [String? riderId]) async {
-    final targetRiderId = riderId ?? _currentRiderId;
-    if (state is RiderOrdersLoaded) {
-      final currentOrders = (state as RiderOrdersLoaded).orders;
-      emit(RiderOrdersLoaded(currentOrders, updatingOrderId: orderId));
+  Future<void> claimOrder(String orderId, String riderId) async {
+    final currentState = state;
+    if (currentState is RiderOrdersLoaded) {
+      emit(RiderOrdersLoaded(
+        availableOrders: currentState.availableOrders,
+        myOrders: currentState.myOrders,
+        updatingOrderId: orderId,
+      ));
     }
     try {
-      await orderRepository.updateOrderStatus(orderId, 'DELIVERED');
-      if (targetRiderId != null && targetRiderId.isNotEmpty) {
-        final list = await orderRepository.getRiderOrders(targetRiderId);
-        emit(RiderOrdersLoaded(list));
-      }
+      await orderRepository.claimOrder(orderId, riderId);
+      final available = await orderRepository.getAvailableOrdersForDelivery();
+      final myOrders = await orderRepository.getRiderOrders(riderId);
+      emit(RiderOrdersLoaded(availableOrders: available, myOrders: myOrders));
+    } catch (e) {
+      emit(RiderOrdersError(e.toString()));
+    }
+  }
+
+  Future<void> updateStatus(String orderId, String newStatus, String riderId) async {
+    final currentState = state;
+    if (currentState is RiderOrdersLoaded) {
+      emit(RiderOrdersLoaded(
+        availableOrders: currentState.availableOrders,
+        myOrders: currentState.myOrders,
+        updatingOrderId: orderId,
+      ));
+    }
+    try {
+      await orderRepository.updateOrderStatus(orderId, newStatus);
+      final available = await orderRepository.getAvailableOrdersForDelivery();
+      final myOrders = await orderRepository.getRiderOrders(riderId);
+      emit(RiderOrdersLoaded(availableOrders: available, myOrders: myOrders));
     } catch (e) {
       emit(RiderOrdersError(e.toString()));
     }

@@ -9,10 +9,15 @@ class RiderOrdersInitial extends RiderOrdersState {}
 class RiderOrdersLoading extends RiderOrdersState {}
 
 class RiderOrdersLoaded extends RiderOrdersState {
-  final List<OrderModel> orders;
+  final List<OrderModel> availableOrders;
+  final List<OrderModel> myOrders;
   final String? updatingOrderId;
 
-  const RiderOrdersLoaded(this.orders, {this.updatingOrderId});
+  const RiderOrdersLoaded({
+    required this.availableOrders,
+    required this.myOrders,
+    this.updatingOrderId,
+  });
 }
 
 class RiderOrdersError extends RiderOrdersState {
