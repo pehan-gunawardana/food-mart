@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/empty_state_widget.dart';
+import '../../../core/utils/snackbar_utils.dart';
 import '../../auth/presentation/bloc/auth_cubit.dart';
 import '../../auth/presentation/bloc/auth_state.dart';
 import 'bloc/rider_orders_cubit.dart';
@@ -270,29 +272,12 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
   }
 
   Widget _buildEmptyPlaceholder(bool isAvailable) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 40.h),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              isAvailable ? Icons.motorcycle_outlined : Icons.history,
-              size: 64.sp,
-              color: Colors.grey[400],
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              isAvailable ? 'No available deliveries near you' : 'No claimed deliveries yet',
-              style: GoogleFonts.poppins(
-                color: Colors.grey[600],
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return EmptyStateWidget(
+      icon: isAvailable ? Icons.motorcycle_outlined : Icons.history,
+      title: isAvailable ? 'No available requests' : 'No claimed deliveries',
+      message: isAvailable
+          ? 'New delivery requests will appear here when restaurants prepare orders.'
+          : 'Claim requests from the available tab to start delivering.',
     );
   }
 
@@ -410,7 +395,14 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
               child: ElevatedButton(
                 onPressed: isUpdating
                     ? null
-                    : () => context.read<RiderOrdersCubit>().claimOrder(order.id, riderId),
+                    : () async {
+                        final success = await context.read<RiderOrdersCubit>().claimOrder(order.id, riderId);
+                        if (success) {
+                          SnackBarUtils.showSuccess(context, 'Order claimed successfully!');
+                        } else {
+                          SnackBarUtils.showError(context, 'Failed to claim order. It might already be claimed.');
+                        }
+                      },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primary,
                   foregroundColor: Colors.white,
@@ -568,7 +560,14 @@ class _RiderHomeScreenState extends State<RiderHomeScreen> {
                 child: ElevatedButton(
                   onPressed: isUpdating
                       ? null
-                      : () => context.read<RiderOrdersCubit>().updateStatus(order.id, nextStatus, riderId),
+                      : () async {
+                          final success = await context.read<RiderOrdersCubit>().updateStatus(order.id, nextStatus, riderId);
+                          if (success) {
+                            SnackBarUtils.showSuccess(context, 'Order status updated successfully!');
+                          } else {
+                            SnackBarUtils.showError(context, 'Failed to update order status.');
+                          }
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: buttonColor,
                     foregroundColor: Colors.white,

@@ -6,9 +6,11 @@ import '../../features/vendor/presentation/screens/vendor_home_screen.dart';
 import '../../features/rider/presentation/rider_home_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
+import '../../features/splash/presentation/screens/splash_screen.dart';
 
 class AppRouter {
   static const String initialRoute = '/';
+  static const String roleSelection = '/role-selection';
   static const String login = '/login';
   static const String register = '/register';
   static const String customerHome = '/customer/home';
@@ -18,7 +20,8 @@ class AppRouter {
 
   static Map<String, WidgetBuilder> get routes {
     return {
-      initialRoute: (context) => const RoleSelectionScreen(),
+      initialRoute: (context) => const SplashScreen(),
+      roleSelection: (context) => const RoleSelectionScreen(),
       login: (context) => const LoginScreen(),
       register: (context) => const RegisterScreen(),
       customerHome: (context) => const HomeScreen(),

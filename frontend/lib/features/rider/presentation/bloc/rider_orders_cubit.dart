@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../customer/data/repositories/order_repository.dart';
+import '../../../customer/data/models/order_model.dart';
 import 'rider_orders_state.dart';
 
 class RiderOrdersCubit extends Cubit<RiderOrdersState> {
@@ -18,9 +19,13 @@ class RiderOrdersCubit extends Cubit<RiderOrdersState> {
     }
   }
 
-  Future<void> claimOrder(String orderId, String riderId) async {
+  Future<bool> claimOrder(String orderId, String riderId) async {
     final currentState = state;
+    List<OrderModel> prevAvailable = [];
+    List<OrderModel> prevMy = [];
     if (currentState is RiderOrdersLoaded) {
+      prevAvailable = currentState.availableOrders;
+      prevMy = currentState.myOrders;
       emit(RiderOrdersLoaded(
         availableOrders: currentState.availableOrders,
         myOrders: currentState.myOrders,
@@ -32,14 +37,27 @@ class RiderOrdersCubit extends Cubit<RiderOrdersState> {
       final available = await orderRepository.getAvailableOrdersForDelivery();
       final myOrders = await orderRepository.getRiderOrders(riderId);
       emit(RiderOrdersLoaded(availableOrders: available, myOrders: myOrders));
+      return true;
     } catch (e) {
-      emit(RiderOrdersError(e.toString()));
+      if (currentState is RiderOrdersLoaded) {
+        emit(RiderOrdersLoaded(
+          availableOrders: prevAvailable,
+          myOrders: prevMy,
+        ));
+      } else {
+        emit(RiderOrdersError(e.toString()));
+      }
+      return false;
     }
   }
 
-  Future<void> updateStatus(String orderId, String newStatus, String riderId) async {
+  Future<bool> updateStatus(String orderId, String newStatus, String riderId) async {
     final currentState = state;
+    List<OrderModel> prevAvailable = [];
+    List<OrderModel> prevMy = [];
     if (currentState is RiderOrdersLoaded) {
+      prevAvailable = currentState.availableOrders;
+      prevMy = currentState.myOrders;
       emit(RiderOrdersLoaded(
         availableOrders: currentState.availableOrders,
         myOrders: currentState.myOrders,
@@ -51,8 +69,17 @@ class RiderOrdersCubit extends Cubit<RiderOrdersState> {
       final available = await orderRepository.getAvailableOrdersForDelivery();
       final myOrders = await orderRepository.getRiderOrders(riderId);
       emit(RiderOrdersLoaded(availableOrders: available, myOrders: myOrders));
+      return true;
     } catch (e) {
-      emit(RiderOrdersError(e.toString()));
+      if (currentState is RiderOrdersLoaded) {
+        emit(RiderOrdersLoaded(
+          availableOrders: prevAvailable,
+          myOrders: prevMy,
+        ));
+      } else {
+        emit(RiderOrdersError(e.toString()));
+      }
+      return false;
     }
   }
 }

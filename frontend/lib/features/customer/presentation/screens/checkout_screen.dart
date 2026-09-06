@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../bloc/cart_cubit.dart';
 import '../bloc/cart_state.dart';
 import '../bloc/order_cubit.dart';
@@ -129,17 +130,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       body: BlocListener<OrderCubit, OrderState>(
         listener: (context, state) {
           if (state is OrderSuccess) {
+            SnackBarUtils.showSuccess(context, 'Order placed successfully!');
             _showSuccessDialog(context);
           } else if (state is OrderError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  'Error placing order: ${state.message}',
-                  style: GoogleFonts.poppins(),
-                ),
-                backgroundColor: AppTheme.primary,
-              ),
-            );
+            SnackBarUtils.showError(context, 'Error placing order: ${state.message}');
           }
         },
         child: Form(

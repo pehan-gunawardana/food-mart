@@ -14,12 +14,7 @@ import 'features/vendor/presentation/bloc/vendor_menu_cubit.dart';
 import 'features/vendor/data/repositories/menu_repository.dart';
 import 'features/auth/data/repositories/auth_repository.dart';
 import 'features/auth/presentation/bloc/auth_cubit.dart';
-import 'features/auth/presentation/bloc/auth_state.dart';
-import 'features/auth/presentation/screens/login_screen.dart';
-import 'features/customer/presentation/screens/home_screen.dart';
-import 'features/vendor/presentation/screens/vendor_home_screen.dart';
 import 'features/rider/presentation/bloc/rider_orders_cubit.dart';
-import 'features/rider/presentation/rider_home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -69,26 +64,7 @@ class MyApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: ThemeMode.light,
-            home: BlocBuilder<AuthCubit, AuthState>(
-              builder: (context, state) {
-                if (state is Authenticated) {
-                  final role = state.user.role.toUpperCase();
-                  if (role == 'VENDOR') {
-                    return const VendorHomeScreen();
-                  } else if (role == 'RIDER') {
-                    return const RiderHomeScreen();
-                  }
-                  return const HomeScreen();
-                } else if (state is Unauthenticated || state is AuthError) {
-                  return const LoginScreen();
-                }
-                return const Scaffold(
-                  body: Center(
-                    child: CircularProgressIndicator(color: AppTheme.primary),
-                  ),
-                );
-              },
-            ),
+            initialRoute: AppRouter.initialRoute,
             onGenerateRoute: AppRouter.onGenerateRoute,
           ),
         );

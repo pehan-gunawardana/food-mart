@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/empty_state_widget.dart';
 import '../../data/models/order_model.dart';
 import '../bloc/order_history_cubit.dart';
 import '../bloc/order_history_state.dart';
@@ -90,34 +91,10 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           } else if (state is OrderHistoryLoaded) {
             final orders = state.orders;
             if (orders.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.shopping_bag_outlined,
-                      size: 64.sp,
-                      color: Colors.grey[300],
-                    ),
-                    SizedBox(height: 16.h),
-                    Text(
-                      'No orders placed yet',
-                      style: GoogleFonts.outfit(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.secondary,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      'Your order history will appear here.',
-                      style: GoogleFonts.poppins(
-                        fontSize: 13.sp,
-                        color: Colors.grey[500],
-                      ),
-                    ),
-                  ],
-                ),
+              return const EmptyStateWidget(
+                icon: Icons.shopping_bag_outlined,
+                title: 'No orders placed yet',
+                message: 'Your order history will appear here.',
               );
             }
 

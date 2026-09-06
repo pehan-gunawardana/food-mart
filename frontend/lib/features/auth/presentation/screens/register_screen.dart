@@ -3,6 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/snackbar_utils.dart';
+import '../../../customer/presentation/screens/home_screen.dart';
+import '../../../rider/presentation/rider_home_screen.dart';
+import '../../../vendor/presentation/screens/vendor_home_screen.dart';
 import '../bloc/auth_cubit.dart';
 import '../bloc/auth_state.dart';
 
@@ -58,16 +62,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
       body: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppTheme.primary,
-              ),
-            );
+            SnackBarUtils.showError(context, state.message);
           } else if (state is Authenticated) {
-            // Pop back to root so main.dart AuthCubit router handles landing screen
-            Navigator.popUntil(context, (route) => route.isFirst);
+            final role = state.user.role.toUpperCase();
+            Widget homeScreen;
+            if (role == 'VENDOR') {
+              homeScreen = const VendorHomeScreen();
+            } else if (role == 'RIDER') {
+              homeScreen = const RiderHomeScreen();
+            } else {
+              homeScreen = const HomeScreen();
+            }
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => homeScreen),
+              (route) => false,
+            );
           }
         },
         child: SafeArea(

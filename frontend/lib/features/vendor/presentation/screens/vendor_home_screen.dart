@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../customer/presentation/bloc/restaurant_cubit.dart';
 import '../../../customer/presentation/bloc/restaurant_state.dart';
 import '../../../customer/data/models/order_model.dart';
@@ -263,34 +264,10 @@ class _VendorHomeScreenState extends State<VendorHomeScreen>
                       final filtered = _filterOrders(state.orders, _tabController.index);
 
                       if (filtered.isEmpty) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.receipt_long_outlined,
-                                size: 64.sp,
-                                color: Colors.grey[300],
-                              ),
-                              SizedBox(height: 16.h),
-                              Text(
-                                'No orders in this tab',
-                                style: GoogleFonts.outfit(
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppTheme.secondary,
-                                ),
-                              ),
-                              SizedBox(height: 8.h),
-                              Text(
-                                'New customer requests will show up here.',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12.sp,
-                                  color: Colors.grey[500],
-                                ),
-                              ),
-                            ],
-                          ),
+                        return const EmptyStateWidget(
+                          icon: Icons.receipt_long_outlined,
+                          title: 'No orders in this tab',
+                          message: 'New customer requests will show up here.',
                         );
                       }
 
