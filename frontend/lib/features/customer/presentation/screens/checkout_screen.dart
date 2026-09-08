@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/routing/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../bloc/cart_cubit.dart';
@@ -25,6 +26,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final TextEditingController _addressController =
       TextEditingController(text: "No 15, Beach Road, Tangalle");
   final _formKey = GlobalKey<FormState>();
+
+  Future<void> _pickLocation() async {
+    final selectedAddress = await Navigator.of(context).pushNamed(
+      AppRouter.locationPicker,
+    );
+
+    if (selectedAddress != null &&
+        selectedAddress is String &&
+        selectedAddress.trim().isNotEmpty) {
+      setState(() {
+        _addressController.text = selectedAddress;
+      });
+      if (mounted) {
+        SnackBarUtils.showSuccess(context, 'Delivery address updated from map');
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -245,15 +263,32 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       SizedBox(height: 24.h),
 
                       // Delivery Address Section
-                      Text(
-                        'Delivery Address',
-                        style: GoogleFonts.outfit(
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.secondary,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Delivery Address',
+                            style: GoogleFonts.outfit(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.secondary,
+                            ),
+                          ),
+                          TextButton.icon(
+                            onPressed: _pickLocation,
+                            icon: Icon(Icons.map_outlined, size: 18.sp, color: AppTheme.primary),
+                            label: Text(
+                              'Pick on Map',
+                              style: GoogleFonts.outfit(
+                                fontSize: 13.sp,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.primary,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 12.h),
+                      SizedBox(height: 8.h),
                       TextFormField(
                         controller: _addressController,
                         style: GoogleFonts.poppins(fontSize: 14.sp, color: AppTheme.secondary),
@@ -264,6 +299,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           filled: true,
                           fillColor: Colors.white,
                           contentPadding: EdgeInsets.all(16.r),
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.map_outlined, color: AppTheme.primary),
+                            tooltip: 'Pick on map',
+                            onPressed: _pickLocation,
+                          ),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16.r),
                             borderSide: const BorderSide(color: Color(0xFFF1F2F6)),
