@@ -1,0 +1,22 @@
+# Java / Maven build output
+**/target/
+*.class
+
+# Flutter / Dart generated files
+**/.dart_tool/
+**/build/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+
+# IDE / OS
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+**/application-local.properties
+**/application-secret.properties
