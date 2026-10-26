@@ -34,6 +34,22 @@ public class OrderService {
 
     @Transactional
     public Order createOrder(OrderRequestDTO request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Order request cannot be null");
+        }
+
+        if (request.getItems() == null || request.getItems().isEmpty()) {
+            throw new IllegalArgumentException("Order must contain at least one item");
+        }
+
+        if (request.getDeliveryAddress() == null || request.getDeliveryAddress().trim().isEmpty()) {
+            throw new IllegalArgumentException("Delivery address is required");
+        }
+
+        if (request.getRestaurantId() == null) {
+            throw new IllegalArgumentException("Restaurant ID is required");
+        }
+
         User customer = null;
         if (request.getCustomerId() != null) {
             customer = userRepository.findById(request.getCustomerId()).orElse(null);
@@ -60,22 +76,45 @@ public class OrderService {
         Order order = new Order();
         order.setCustomer(customer);
         order.setRestaurant(restaurant);
-        order.setDeliveryAddress(request.getDeliveryAddress());
+        order.setDeliveryAddress(request.getDeliveryAddress().trim());
         order.setStatus(OrderStatus.PENDING);
 
         BigDecimal totalAmount = BigDecimal.ZERO;
         List<OrderItem> orderItems = new ArrayList<>();
 
         for (OrderRequestDTO.OrderItemDTO itemDto : request.getItems()) {
+            if (itemDto == null) {
+                throw new IllegalArgumentException("Order item cannot be null");
+            }
+
+            if (itemDto.getMenuItemId() == null) {
+                throw new IllegalArgumentException("Menu item ID is required");
+            }
+
+            if (itemDto.getQuantity() == null || itemDto.getQuantity() <= 0) {
+                throw new IllegalArgumentException("Item quantity must be greater than zero");
+            }
+
             MenuItem menuItem = menuItemRepository.findById(itemDto.getMenuItemId())
                     .orElseThrow(() -> new IllegalArgumentException("MenuItem not found with ID: " + itemDto.getMenuItemId()));
+
+            if (!menuItem.isAvailable()) {
+                throw new IllegalArgumentException("Menu item is currently unavailable: " + menuItem.getName());
+            }
+
+            if (menuItem.getRestaurant() == null || !menuItem.getRestaurant().getId().equals(restaurant.getId())) {
+                throw new IllegalArgumentException("Menu item does not belong to the selected restaurant: " + menuItem.getName());
+            }
+
+            BigDecimal price = menuItem.getPrice();
+            if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException("Invalid price for menu item: " + menuItem.getName());
+            }
 
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order);
             orderItem.setMenuItem(menuItem);
             orderItem.setQuantity(itemDto.getQuantity());
-
-            BigDecimal price = itemDto.getPrice() != null ? itemDto.getPrice() : menuItem.getPrice();
             orderItem.setPrice(price);
 
             BigDecimal itemTotal = price.multiply(BigDecimal.valueOf(itemDto.getQuantity()));
